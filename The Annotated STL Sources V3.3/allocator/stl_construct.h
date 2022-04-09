@@ -60,8 +60,13 @@ inline void _Destroy(_Tp* __pointer) {
   __pointer->~_Tp();
 }
 
-// 若是 __false_type，这才以循环的方式遍历整个范围，并在循环中每经历一个对象就调用第一个版本的 destory()。
-// 这是 non-trivial destructor
+// 第二个版本，接收first和last两个迭代器。准备将[first, last)范围内的所有对象析构掉。
+// 我们不知道这个范围有多大，万一很大，而每个对象的析构函数都“无关痛痒”，那么一次次调用这些“无关痛痒”的析构函数，对效率是一种伤害
+// 因此，借助value_type()获取迭代器所指对象的类型，再利用__type_traits<T>判断该类型的析构函数是否“无关痛痒”
+// 如果是（__true_type），则什么都不做
+// 否则（__false_type），才循环遍历删除对象
+
+// destructor不是trivial（trivial: 不重要的，琐碎的）
 template <class _ForwardIterator>
 void
 __destroy_aux(_ForwardIterator __first, _ForwardIterator __last, __false_type)
@@ -70,8 +75,8 @@ __destroy_aux(_ForwardIterator __first, _ForwardIterator __last, __false_type)
     destroy(&*__first);
 }
 
-// 若是 __true_type，什么都不做；这是 trivial destructor。
-template <class _ForwardIterator> 
+// destructor是trivial
+template <class _ForwardIterator>
 inline void __destroy_aux(_ForwardIterator, _ForwardIterator, __true_type) {}
 
 // 利用__type_traits<T>判断该类型的析构函数是否需要做什么。
@@ -119,7 +124,6 @@ inline void destroy(_Tp* __pointer) {
   _Destroy(__pointer);
 }
 
-// 第二个版本，接受 __first 和 __last 两个迭代器，将 [__first, __last)范围内的所有对象析构掉。
 template <class _ForwardIterator>
 inline void destroy(_ForwardIterator __first, _ForwardIterator __last) {
   _Destroy(__first, __last);

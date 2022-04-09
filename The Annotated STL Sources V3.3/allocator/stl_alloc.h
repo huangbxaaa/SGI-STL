@@ -29,6 +29,7 @@
 #  define __PRIVATE private
 #endif
 
+// 测试在 class template 中拥有static data members的组态 （config配置常量）
 #ifdef __STL_STATIC_TEMPLATE_MEMBER_BUG
 #  define __USE_MALLOC
 #endif
@@ -109,7 +110,8 @@ __STL_BEGIN_NAMESPACE
 #endif
 
 // SGI STL 第一级配置器
-// 无 “template 类型参数”，“非类型参数 __inst”，完全没有用
+// 第一级配置器直接使用C语言的malloc()和free()
+// alloc(不管是一级配置器还是二级配置器)，都不接收template参数
 template <int __inst>
 class __malloc_alloc_template {
 
@@ -168,6 +170,7 @@ template <int __inst>
 void (* __malloc_alloc_template<__inst>::__malloc_alloc_oom_handler)() = 0;
 #endif
 
+// 内存溢出情况下的malloc函数: _S_oom_malloc
 template <int __inst>
 void*
 __malloc_alloc_template<__inst>::_S_oom_malloc(size_t __n)
@@ -185,6 +188,7 @@ __malloc_alloc_template<__inst>::_S_oom_malloc(size_t __n)
     }
 }
 
+// 内存溢出情况下的realloc函数: _S_oom_realloc
 template <int __inst>
 void* __malloc_alloc_template<__inst>::_S_oom_realloc(void* __p, size_t __n)
 {
